@@ -1,94 +1,70 @@
-var soldier, alienBoss, alienArmy, alienGroup;
-var alienHealth, healthBar;
-var life, bullets, bulletsGroup, alienBullets, alienBulletsGroup;
-var invisibleGround, bgsprite;
+var player;
 var score = 0;
-var gameState;
-var PLAY, END, LEVEL1, WIN;
-var confetti = [];
-
-function preload() {
-  lifeImg = loadImage("images/life.png");
-  soldierStanding = loadImage("images/standing.png")
-  soldierRunning = loadAnimation("images/jumping1.png", "images/jumping4.png")
-  soldierJumping = loadAnimation("images/jumping1.png", "images/jumping2.png", "images/jumping3.png",
-    "images/jumping4.png", "images/jumping5.png", "images/jumping6.png");
-  soldierShooting = loadImage("images/soldiershooting.png");
-  alienBossRunning = loadAnimation("images/alien1.png", "images/alien2.png", "images/alien3.png");
-  alienArmyImg = loadImage("images/alienarmy.png");
-  bgImg = loadImage("images/bg1.png")
-}
+var highScore = 0;
+var gameState, START, PLAY, END;
+var redBlocksGroup, greenBlocksGroup, blueBlocksGroup, purpleBlocksGroup;
 
 function setup() {
-  createCanvas(1000, 500);
+  createCanvas(500, 500);
 
+  START = 0;
   PLAY = 1;
-  END = 0;
-  LEVEL1 = 2;
-  WIN = 3;
+  END = 2;
+  gameState = START;
 
-  gameState = PLAY;
+  player = createSprite(width / 2, height - 100, 40, 40);
+  player.shapeColor = "white";
 
-  life = 5;
-  alienHealth = 100;
+  redBlocksGroup = new Group();
+  greenBlocksGroup = new Group();
+  blueBlocksGroup = new Group();
+  purpleBlocksGroup = new Group();
 
-  bgsprite = createSprite(width / 2, height / 2, 100, 100)
-  bgsprite.addImage(bgImg);
-  bgsprite.scale = 6;
+  startButton = createButton("START");
+  startButton.position(width / 2 - 25, height / 2);
+  startButton.mousePressed(() => {
+    gameState = PLAY;
+    startButton.hide();
+  });
 
-  soldier = createSprite(200, 440, 50, 80);
-  soldier.addImage(soldierStanding);
-  soldier.scale = 0.5;
-  soldier.addAnimation("run", soldierRunning);
-  soldier.addAnimation("jump", soldierJumping);
-  soldier.addImage("standing", soldierStanding);
-  soldier.addImage("shoot", soldierShooting);
-  soldier.setCollider("rectangle", 0, 30, 250, 300);
-
-  alienGroup = new Group();
-  bulletsGroup = new Group();
-  alienBulletsGroup = new Group();
-
-  invisibleGround = createSprite(500, 490, 1000, 20);
-  invisibleGround.visible = false;
-
-
+  resetButton = createButton("RESET");
+  resetButton.position(width / 2 - 25, 10);
+  resetButton.hide();
 }
 
 function draw() {
-  background("black");
+  background(0);
 
-  drawSprites();
-
-  displayLives();
-
-  displayScore();
-
-  if (gameState == PLAY) {
+  if (gameState === PLAY) {
     play();
+    scoreChanging();
   }
 
-  if (gameState == LEVEL1) {
-    level1();
-  }
-
-  if (life === 0) {
+  if (score < 0 || score === 20) {
     gameState = END;
   }
 
   if (gameState === END) {
-    end();
-  }
-
-  if (alienHealth === 0) {
-    for (var i = 0; i < 100; i++) {
-      confetti.push(createSprite(random(0, width), random(0, height), 5, 5))
+    
+    fill("white");
+    text("GAME OVER!!",200,250)
+    resetButton.show();
+    resetButton.mousePressed (function(){
+      gameState = PLAY;
+      redBlocksGroup.destroyEach();
+      greenBlocksGroup.destroyEach();
+      player.velocityX = 0;
+      if(highScore < score){
+        highScore = score;
+      }
+      score = 0;
+      resetButton.hide();
     }
-    gameState = WIN;
+    ) 
   }
 
-  if (gameState === WIN) {
-    win();
-  }
+  console.log(gameState);
+  drawSprites();
 
+  textScores();
 }

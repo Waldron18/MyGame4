@@ -1,158 +1,74 @@
-function displayLives() {
-    //shows the lives
-    var x = soldier.x - 480;
-    for (var i = 0; i < life; i++) {
-        image(lifeImg, x, 10, 50, 50);
-        x = x + 50
-    }
 
-}
+function spawnRed() {
+    var redBlocks = createSprite(random(20, 480), random(1, 100), 30, 30);
+    redBlocks.shapeColor = "red";
+    redBlocks.velocityY = 10;
+    redBlocksGroup.add(redBlocks);
+ }
 
-function displayScore() {
-    fill("white");
-    textSize(30);
-    textFont("Algerian");
-    text(" SCORE: " + score, 20, 90);
-}
 
-function spawnArmy() {
-    if (frameCount % 80 === 0) {
-        alienArmy = createSprite(soldier.x + 500, 410, 50, 30);
-        alienArmy.addImage(alienArmyImg);
-        alienArmy.velocityX = -3;
-        alienArmy.collide(invisibleGround);
-        alienArmy.scale = 1.25;
-        alienArmy.setCollider("circle", 0, 0, 60);
-
-        alienArmy.lifetime = 800;
-        alienGroup.add(alienArmy);
-    }
-}
-
-function bulletsShooting() {
-    bullets = createSprite(soldier.x + 55, soldier.y - 30, 10, 5);
-    bullets.velocityX = 10;
-    bullets.shapeColor = "red";
-    bullets.visible = true;
-    bulletsGroup.add(bullets);
-}
-
-function bulletsShootingAlien() {
-    if (frameCount % 80 === 0) {
-        alienbullets = createSprite(alienBoss.x - 20, alienBoss.y - 30, 15, 10);
-        alienbullets.velocityX = -10;
-        alienbullets.shapeColor = "blue";
-        alienbullets.visible = true;
-        alienBulletsGroup.add(alienbullets);
-    }
+function spawnGreen() {
+    var greenBlocks = createSprite(random(20, 480), random(1, 100), 30, 30);
+    greenBlocks.shapeColor = "green";
+    greenBlocks.velocityY = 10;
+    greenBlocksGroup.add(greenBlocks);
 }
 
 function movement() {
 
-    soldier.x = camera.position.x;
-    invisibleGround.x = soldier.x
-
-    //gravity
-    soldier.velocityY = soldier.velocityY + 0.8;
-    soldier.collide(invisibleGround);
-
-    if (keyWentDown(DOWN_ARROW)) {
-        fill("red");
-        bulletsShooting();
-        soldier.changeImage("shoot", soldierShooting);
-    } else if (keyIsDown(RIGHT_ARROW)) {
-        soldier.changeAnimation("run", soldierRunning);
-        soldier.velocityX = 3;
-        bgsprite.velocityX = -3;
+    if (keyDown(LEFT_ARROW)) {
+        player.velocityX = -9;
+    } else if (keyDown(RIGHT_ARROW)) {
+        player.velocityX = 9;
     } else {
-        soldier.changeImage("standing", soldierStanding);
-        soldier.velocityX = 0;
-        bgsprite.velocityX = 0;
-    }
-    //jumping
-    if (keyDown(UP_ARROW)) {
-        soldier.velocityY = -5;
-        soldier.changeAnimation("jump", soldierJumping);
-    }
-
-}
-
-function play() {
-
-    movement();
-    spawnArmy();
-
-    if (alienGroup.isTouching(soldier)) {
-        life -= 1;
-        alienGroup.destroyEach();
-    }
-
-
-    if (bulletsGroup.isTouching(alienGroup)) {
-        alienGroup.destroyEach();
-        bulletsGroup.destroyEach();
-        score += 10;
-    }
-
-    if (score == 100) {
-        alienBoss = createSprite(soldier.x + 500, 440, 50, 80);
-        alienBoss.addAnimation("alienrunning", alienBossRunning);
-        alienBoss.velocityX = -3;
-        alienBoss.scale = 2;
-        alienBoss.collide(invisibleGround);
-        gameState = LEVEL1;
+        player.velocityX = 0;
     }
 }
 
-function level1() {
+function spawning(){
+    var rand = Math.round(Math.random(1, 2));
 
-    movement();
-
-    fill("green");
-    rect(soldier.x + 200, 100, alienHealth * 2, 20);
-
-    bulletsShootingAlien();
-
-    if (alienBoss.isTouching(soldier)) {
-        life -= 1;
-        alienBoss.x += 300;
-    }
-
-    if (alienBulletsGroup.isTouching(soldier)) {
-        life -= 1;
-        alienBulletsGroup.destroyEach();
-    }
-
-    if (bulletsGroup.isTouching(alienBoss)) {
-        alienHealth -= 10;
-        bulletsGroup.destroyEach();
-    }
-
-    if (alienHealth === 0) {
-        alienBoss.destroy();
-        gameState = END;
+    if (frameCount % 100 === 0) {
+      if (rand === 0) {
+        spawnRed();
+      }
+      else if (rand === 1) {
+        spawnGreen();
+      }
     }
 }
 
-function end() {
-    textSize(40);
-    strokeWeight(5);
-    stroke("red");
-    background(bgImg);
-    text("YOU  LOSE!", width / 2 - 100, height / 2);
+function scoreChanging(){
+ 
+  if(redBlocksGroup.isTouching(player)){
+    score -= 1
+    redBlocksGroup.destroyEach();
+    gameState = END;
+  }
+
+  if(greenBlocksGroup.isTouching(player)){
+    score += 1
+    greenBlocksGroup.destroyEach();
+  }
+  
 }
 
+function textScores(){
+    
+  textSize(10);
+  fill("white");
+  text("Score: " + score,10,20);
+  text("Highscore: " + highScore,10,50);
+}
 
-function win() {
-    textSize(40);
-    strokeWeight(5);
-    stroke("green");
-    text("YOU  WON!", width / 2 - 100, height / 2);
-    for(var i = 0; i < confetti.length; i++){
-        confetti[i].velocityY = 5;
-        confetti[i].shapeColor = color(random(0,255),random(0,255),random(0,255));
-        if(confetti[i].y > 500){
-            confetti[i].y = random(0,500);
-        }
-    }
+function play(){
+  movement();
+  spawning();
+}
+
+function adaptivity(){
+  if(score%10 === 0){
+    redBlocks.velocityY += 4;
+    greenBlocksGroup.velocityY += 4;
+  }
 }
